@@ -24,6 +24,7 @@ class _MyAppState extends State<MyApp> {
   };
 
   List<Meal> _availableMeals = DUMMY_MEALS;
+  List<Meal> _favoriteMeals = [];
 
   void _setFilters(Map<String, bool> filterData) {
     setState(() {
@@ -31,19 +32,33 @@ class _MyAppState extends State<MyApp> {
       this._availableMeals = DUMMY_MEALS.where((m) {
         if (this._filters['gluten'] && !m.isGlutenFree) {
           return false;
-        }
-        else if (this._filters['lactose'] && !m.isLactoseFree) {
+        } else if (this._filters['lactose'] && !m.isLactoseFree) {
           return false;
-        }
-        else if (this._filters['vegan'] && !m.isVegan) {
+        } else if (this._filters['vegan'] && !m.isVegan) {
           return false;
-        }
-        else if (this._filters['vegetarian'] && !m.isVegetarian) {
+        } else if (this._filters['vegetarian'] && !m.isVegetarian) {
           return false;
         }
         return true;
       }).toList();
     });
+  }
+
+  void _toggleFavorite(String mealId) {
+    final existingIndex = this._favoriteMeals.indexWhere((m) => m.id == mealId);
+    if (existingIndex >= 0) {
+      setState(() {
+        this._favoriteMeals.removeAt(existingIndex);
+      });
+    } else {
+      setState(() {
+        this._favoriteMeals.add(DUMMY_MEALS.firstWhere((m) => m.id == mealId));
+      });
+    }
+  }
+
+  bool _isMealFavorite(String id) {
+    return this._favoriteMeals.any((m) => m.id == id);
   }
 
   @override
@@ -67,10 +82,12 @@ class _MyAppState extends State<MyApp> {
       /*home: CategoriesScreen(),*/
       initialRoute: '/',
       routes: {
-        '/': (ctx) => TabsScreen(),
-        CategoryMealsScreen.route: (ctx) => CategoryMealsScreen(this._availableMeals),
-        MealDetailScreen.route: (ctx) => MealDetailScreen(),
-        FiltersScreen.route: (ctx) => FiltersScreen(this._filters, this._setFilters),
+        '/': (ctx) => TabsScreen(this._favoriteMeals),
+        CategoryMealsScreen.route: (ctx) =>
+            CategoryMealsScreen(this._availableMeals),
+        MealDetailScreen.route: (ctx) => MealDetailScreen(this._toggleFavorite, this._isMealFavorite),
+        FiltersScreen.route: (ctx) =>
+            FiltersScreen(this._filters, this._setFilters),
       },
       /*onGenerateRoute: (settings) {
         return MaterialPageRoute(builder: (ctx) => CategoriesScreen());
